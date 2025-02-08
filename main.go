@@ -1,0 +1,5 @@
+package salenotifier
+
+func main() {
+
+}
