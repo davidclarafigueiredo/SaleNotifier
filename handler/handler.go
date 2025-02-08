@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -38,9 +39,14 @@ type Message struct {
 
 var jsonbody Message
 
-func Unmarshal(body []byte) {
+func Unmarshal(body []byte) error {
 	if err := json.Unmarshal(body, &jsonbody); err != nil {
 		log.Error().Err(err).Msg("Could not unmarshal json bytestream")
 	}
-	log.Debug().Msgf("Title ID: %d", jsonbody.Prices[0].TitleID)
+	log.Debug().Msgf("Title ID: %s", jsonbody.Prices[0].DiscountPrice.Amount)
+	if jsonbody.Prices[0].DiscountPrice.Amount == "" {
+		err := errors.New("400: no discount price found")
+		return err
+	}
+	return nil
 }
