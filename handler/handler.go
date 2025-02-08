@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -37,16 +37,27 @@ type Message struct {
 	} `json:"prices"`
 }
 
-var jsonbody Message
+type prodcut struct {
+	Title string
+	Price int
+}
 
-func Unmarshal(body []byte) error {
+var jsonbody Message
+var game prodcut
+
+func unmarshal(body []byte) bool {
 	if err := json.Unmarshal(body, &jsonbody); err != nil {
 		log.Error().Err(err).Msg("Could not unmarshal json bytestream")
 	}
 	log.Debug().Msgf("Title ID: %s", jsonbody.Prices[0].DiscountPrice.Amount)
-	if jsonbody.Prices[0].DiscountPrice.Amount == "" {
-		err := errors.New("400: no discount price found")
-		return err
+	return jsonbody.Prices[0].DiscountPrice.Amount != ""
+}
+
+func GetPrice(body []byte) string {
+	if unmarshal(body) {
+		game = prodcut{Title: "Title", Price: 0}
+		fmt.Printf("Title: %s\n", game.Title)
+		return jsonbody.Prices[0].DiscountPrice.Amount
 	}
-	return nil
+	return jsonbody.Prices[0].RegularPrice.Amount
 }

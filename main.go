@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/davidclarafigueiredo/SaleNotifier/config"
 	"github.com/davidclarafigueiredo/SaleNotifier/connect"
 	"github.com/davidclarafigueiredo/SaleNotifier/handler"
@@ -8,5 +10,5 @@ import (
 
 func main() {
 	config.Init()
-	handler.Unmarshal(connect.Connect())
+	fmt.Printf("%s", handler.GetPrice(connect.Connect()))
 }
