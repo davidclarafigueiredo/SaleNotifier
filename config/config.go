@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,6 +27,7 @@ func findProjectRoot(startDir string) (string, error) {
 }
 
 func Init() {
+	configLogger()
 	// Get the current working directory
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -47,4 +49,8 @@ func Init() {
 	if err := godotenv.Load(envFilePath); err != nil {
 		log.Error().Err(err).Msg("Could not load .env file")
 	}
+}
+
+func configLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 }
