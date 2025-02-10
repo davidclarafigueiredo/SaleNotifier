@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -18,12 +17,10 @@ func findProjectRoot(startDir string) (string, error) {
 
 		parentDir := filepath.Dir(startDir)
 		if parentDir == startDir {
-			break // We've reached the root of the filesystem without finding .git
+			log.Error().Msg("git directory not found")
 		}
 		startDir = parentDir
 	}
-
-	return "", fmt.Errorf(".git directory not found")
 }
 
 func Init() {
