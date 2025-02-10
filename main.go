@@ -11,4 +11,5 @@ import (
 func main() {
 	config.Init()
 	fmt.Printf("%s", handler.GetPrice(connect.Connect()))
+	handler.SendMail()
 }
