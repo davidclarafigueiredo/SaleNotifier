@@ -10,6 +10,6 @@ import (
 
 func main() {
 	config.Init()
-	fmt.Printf("%s", handler.GetPrice(connect.Connect()))
+	fmt.Printf("%s\n", handler.GetPrice(connect.Connect()))
 	//handler.SendMail()
 }
