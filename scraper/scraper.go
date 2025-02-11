@@ -1,36 +1,14 @@
 package scraper
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 )
 
-func GetURL() string {
-	file, err := os.Open("data/import")
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	if scanner.Scan() { // Reads the first line
-		return scanner.Text()
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
-	}
-	return ""
-}
-
-func GetInfo(info string) string {
-	url := GetURL()
+func GetInfo(info string, url string) string {
 	if url == "" {
 		log.Fatal("No URL found in wishlist.txt")
 	}
@@ -59,10 +37,14 @@ func GetInfo(info string) string {
 	return ""
 }
 
-func GetNSUID() string {
-	return GetInfo("offdeviceNsuID")
+func GetNSUID(url string) string {
+	return GetInfo("offdeviceNsuID", url)
 }
 
-func GetGameTitle() string {
-	return GetInfo("gameTitle")
+func GetGameTitle(url string) string {
+	return GetInfo("gameTitle", url)
+}
+
+func GetPrice(url string) string {
+	return GetInfo("offdeviceProductPrice", url)
 }
