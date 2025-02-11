@@ -13,25 +13,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func ImportURL() string {
-	file, err := os.Open("data/import")
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	if scanner.Scan() { // Reads the first line
-		return scanner.Text()
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
-	}
-	return ""
-}
-
 func Contains(list []string, item string) bool {
 	for _, v := range list {
 		if v == item {
