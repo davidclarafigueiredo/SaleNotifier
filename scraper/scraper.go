@@ -2,18 +2,18 @@ package scraper
 
 import (
 	"bufio"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
+
+	"github.com/rs/zerolog/log"
 )
 
 func GetURL() string {
 	file, err := os.Open("data/import")
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		log.Error().Err(err).Msg("Error opening file")
 	}
 	defer file.Close()
 
@@ -24,28 +24,24 @@ func GetURL() string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading file:", err)
+		log.Error().Err(err).Msg("Error reading file")
 	}
+	log.Fatal().Msg("URL not found")
 	return ""
 }
 
 func GetInfo(info string) string {
 	url := GetURL()
-	if url == "" {
-		log.Fatal("No URL found in wishlist.txt")
-	}
 
-	// Send HTTP request
 	response, err := http.Get(url)
 	if err != nil {
-		log.Fatal("Error fetching the webpage:", err)
+		log.Fatal().Err(err).Msg("Error fetching the webpage")
 	}
 	defer response.Body.Close()
 
-	// Read response body
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal("Error reading response body:", err)
+		log.Fatal().Err(err).Msg("Error reading response body")
 	}
 
 	titleRegex := regexp.MustCompile(`"` + info + `"\s*:\s*"([^"]+)"`)
@@ -55,7 +51,7 @@ func GetInfo(info string) string {
 		return matches[1]
 	}
 
-	fmt.Printf("%s not found.\n", info)
+	log.Info().Msgf("%s not found.", info)
 	return ""
 }
 
