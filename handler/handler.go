@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
 	"github.com/rs/zerolog/log"
 )
 
@@ -55,7 +56,7 @@ func unmarshal(body []byte) bool {
 
 func GetPrice(body []byte) string {
 	if unmarshal(body) {
-		game = prodcut{Title: "Title", Price: 0}
+		game = prodcut{Title: scraper.GetGameTitle(), Price: 0}
 		fmt.Printf("Title: %s\n", game.Title)
 		return jsonbody.Prices[0].DiscountPrice.Amount
 	}
