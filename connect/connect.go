@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
 	"github.com/rs/zerolog/log"
 )
 
 func Connect() []byte {
 	// Get the URL from the environment variable
-	url := os.Getenv("REQUEST")
+	url := os.Getenv("REQUEST") + scraper.GetNSUID()
 	// Connect to the site
 	res, err := http.Get(url)
 	if err != nil {
