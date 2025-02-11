@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,27 +37,31 @@ type Message struct {
 	} `json:"prices"`
 }
 
-type prodcut struct {
-	Title string
-	Price int
-}
-
-var jsonbody Message
-var game prodcut
-
-func unmarshal(body []byte) bool {
-	if err := json.Unmarshal(body, &jsonbody); err != nil {
+func unmarshal(body []byte) (Message, bool) {
+	var data Message
+	if err := json.Unmarshal(body, &data); err != nil {
 		log.Error().Err(err).Msg("Could not unmarshal json bytestream")
+		return Message{}, false
 	}
-	log.Debug().Msgf("Title ID: %s", jsonbody.Prices[0].DiscountPrice.Amount)
-	return jsonbody.Prices[0].DiscountPrice.Amount != ""
+	log.Debug().Msgf("Title ID: %s", data.Prices[0].DiscountPrice.Amount)
+	return data, data.Prices[0].DiscountPrice.Amount != ""
 }
 
 func GetPrice(body []byte) string {
-	if unmarshal(body) {
-		game = prodcut{Title: scraper.GetGameTitle(), Price: 0}
-		fmt.Printf("Title: %s\n", game.Title)
-		return jsonbody.Prices[0].DiscountPrice.Amount
+	data, hasDiscount := unmarshal(body)
+	if hasDiscount {
+		fmt.Printf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.RawValue)
+		return data.Prices[0].DiscountPrice.RawValue
 	}
-	return jsonbody.Prices[0].RegularPrice.Amount
+	fmt.Printf("Returning regular price: %s\n", data.Prices[0].RegularPrice.RawValue)
+	return data.Prices[0].RegularPrice.RawValue
+}
+
+func GetFormPrice(body []byte) string {
+	data, hasDiscount := unmarshal(body)
+
+	if hasDiscount {
+		return data.Prices[0].DiscountPrice.Amount
+	}
+	return data.Prices[0].RegularPrice.Amount
 }
