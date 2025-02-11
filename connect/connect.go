@@ -3,17 +3,13 @@ package connect
 import (
 	"io"
 	"net/http"
-	"os"
 
-	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
 	"github.com/rs/zerolog/log"
 )
 
-func Connect() []byte {
-	// Get the URL from the environment variable
-	url := os.Getenv("REQUEST") + scraper.GetNSUID()
+func Connect(apiUrl string) []byte {
 	// Connect to the site
-	res, err := http.Get(url)
+	res, err := http.Get(apiUrl)
 	if err != nil {
 		log.Error().Err(err).Msg("Could not connect to site")
 	}
