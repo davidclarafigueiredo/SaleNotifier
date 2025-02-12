@@ -3,16 +3,17 @@ package actions
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/davidclarafigueiredo/SaleNotifier/connect"
 	"github.com/davidclarafigueiredo/SaleNotifier/handler"
 	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
+// returns a boolean if game is part of the wishlist (i think?)
 func Contains(list []string, item string) bool {
 	for _, v := range list {
 		if v == item {
@@ -22,13 +23,14 @@ func Contains(list []string, item string) bool {
 	return false
 }
 
+// return an array of strings from the wishlist file
 func ReturnArrayFromWishlist(column int) []string {
 	fileName := "data/wishlist"
 	separator := "; "
 
 	readFile, err := os.Open(fileName)
 	if err != nil && !os.IsNotExist(err) {
-		log.Fatal("Error opening output file for reading:", err)
+		log.Fatal().Err(err).Msg("Error opening output file for reading")
 	}
 	defer readFile.Close()
 
@@ -45,7 +47,7 @@ func ReturnArrayFromWishlist(column int) []string {
 		}
 
 		if err := readFileScanner.Err(); err != nil {
-			log.Fatal("Error reading output file:", err)
+			log.Fatal().Err(err).Msg("Error reading output file")
 		}
 	}
 
@@ -56,12 +58,13 @@ func ReturnArrayFromWishlist(column int) []string {
 func WriteEntrieToWishlist(url string, nsuidEntries []string) bool {
 	outputFileName := "data/wishlist"
 	nsuid := scraper.GetNSUID(url)
+	log.Debug().Msgf("Scraped")
 	separator := "; "
 
 	// Open or create the output file
 	outputFile, err := os.OpenFile(outputFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Error opening/creating output file")
 	}
 	defer outputFile.Close()
 
@@ -69,10 +72,12 @@ func WriteEntrieToWishlist(url string, nsuidEntries []string) bool {
 		return false
 	}
 	gameTitle := scraper.GetGameTitle(url)
+	log.Debug().Msgf("Game Title scraped")
 	apiUrl := os.Getenv("REQUEST") + nsuid
 
 	regularPrice := scraper.GetPrice(url)
 	discountedPrice := handler.GetPrice(connect.Connect(apiUrl))
+	log.Info().Msgf("Regular Price: %s, Discounted Price: %s", regularPrice, discountedPrice)
 
 	isDiscounted := ComparePrice(url, apiUrl)
 
@@ -88,22 +93,20 @@ func WriteEntrieToWishlist(url string, nsuidEntries []string) bool {
 
 	_, err = outputFile.WriteString(entry)
 	if err != nil {
-		log.Fatal("Error writing to file:", err)
+		log.Fatal().Err(err).Msg("Error writing to output file")
 	}
 	return true
 }
 
 func CreateWishlistEntries() {
 	sourceFileName := "data/import"
-
 	nsuidEntries := ReturnArrayFromWishlist(0)
 
-	// Open the source file for reading
 	sourceFile, err := os.Open(sourceFileName)
 	if err != nil {
-		log.Fatal("Error opening file:", err)
+		log.Fatal().Err(err).Msg("Error opening file")
 	}
-	defer sourceFile.Close() // Ensure file is closed when done
+	defer sourceFile.Close()
 
 	// Create a scanner to read the file line by line
 	sourceFileScanner := bufio.NewScanner(sourceFile)
@@ -116,7 +119,7 @@ func CreateWishlistEntries() {
 
 	// Check for errors while scanning
 	if err := sourceFileScanner.Err(); err != nil {
-		log.Fatal("Error reading file:", err)
+		log.Fatal().Err(err).Msg("Error reading file")
 	}
 
 	// Write to file
@@ -133,7 +136,7 @@ func UpdateWishlistEntries() {
 	// Create (or overwrite) the file
 	file, err := os.Create(fileName)
 	if err != nil {
-		log.Fatal("Error creating file:", err)
+		log.Fatal().Err(err).Msg("Error creating file")
 	}
 	defer file.Close()
 
