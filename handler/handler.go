@@ -2,41 +2,69 @@ package handler
 
 import (
 	"encoding/json"
-	"strconv"
+	"time"
 
-	"github.com/davidclarafigueiredo/SaleNotifier/model"
 	"github.com/rs/zerolog/log"
 )
 
-// return a ResponseJSON struct from the json bytestream
-func unmarshal(body []byte) model.ResponseJSON {
-	var response model.ResponseJSON
-	if err := json.Unmarshal(body, &response); err != nil {
+type Message struct {
+	Personalized bool   `json:"personalized"`
+	Country      string `json:"country"`
+	Prices       []struct {
+		TitleID      int64  `json:"title_id"`
+		SalesStatus  string `json:"sales_status"`
+		RegularPrice struct {
+			Amount   string `json:"amount"`
+			Currency string `json:"currency"`
+			RawValue string `json:"raw_value"`
+		} `json:"regular_price"`
+		DiscountPrice struct {
+			Amount        string    `json:"amount"`
+			Currency      string    `json:"currency"`
+			RawValue      string    `json:"raw_value"`
+			StartDatetime time.Time `json:"start_datetime"`
+			EndDatetime   time.Time `json:"end_datetime"`
+		} `json:"discount_price"`
+		GoldPoint struct {
+			BasicGiftGp     string `json:"basic_gift_gp"`
+			BasicGiftRate   string `json:"basic_gift_rate"`
+			ConsumeGp       string `json:"consume_gp"`
+			ExtraGoldPoints []any  `json:"extra_gold_points"`
+			GiftGp          string `json:"gift_gp"`
+			GiftRate        string `json:"gift_rate"`
+		} `json:"gold_point"`
+	} `json:"prices"`
+}
+
+func unmarshal(body []byte) (Message, bool) {
+	var data Message
+	if err := json.Unmarshal(body, &data); err != nil {
 		log.Fatal().Err(err).Msg("Could not unmarshal json bytestream")
+		return Message{}, false
 	}
-	log.Debug().Msgf("Title ID: %s", response.Response.Docs[0].Title)
-	return response
+	log.Debug().Msgf("Title ID: %s", data.Prices[0].DiscountPrice.Amount)
+	return data, data.Prices[0].DiscountPrice.Amount != ""
 }
 
-// returns the regular price of a game using the json bytestream
+// returns the regular price of a game using the json bytestream if it does not have a discount it returns the regular price
 func GetPrice(body []byte) string {
-	data := unmarshal(body)
-	log.Debug().Msgf("Price for the title: %f\n", data.Response.Docs[0].PriceRegularF)
-	return strconv.FormatFloat(data.Response.Docs[0].PriceRegularF, 'f', -1, 64)
-}
-
-// returns the price of a game with discount using the json bytestream if it does not have a discount it returns the regular price
-func GetFormPrice(body []byte) string {
-	data := unmarshal(body)
-
-	if data.Response.Docs[0].PriceHasDiscountB {
-		return strconv.FormatFloat(data.Response.Docs[0].PriceDiscountedF, 'f', -1, 64)
+	data, hasDiscount := unmarshal(body)
+	if hasDiscount {
+		log.Debug().Msgf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.RawValue)
+		return data.Prices[0].DiscountPrice.RawValue
 	}
-	return GetPrice(body)
+	log.Debug().Msgf("Returning regular price: %s\n", data.Prices[0].RegularPrice.RawValue)
+	return data.Prices[0].RegularPrice.RawValue
 }
 
-// returns the title of a game using the json bytestream
-func GetGameTitle(body []byte) string {
-	data := unmarshal(body)
-	return data.Response.Docs[0].Title
+// returns the price formatted of a game with discount using the json bytestream if it does not have a discount it returns the regular price
+
+func GetFormPrice(body []byte) string {
+	data, hasDiscount := unmarshal(body)
+	if hasDiscount {
+		log.Debug().Msgf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.Amount)
+		return data.Prices[0].DiscountPrice.Amount
+	}
+	log.Debug().Msgf("Returning regular price: %s\n", data.Prices[0].RegularPrice.Amount)
+	return data.Prices[0].RegularPrice.Amount
 }
