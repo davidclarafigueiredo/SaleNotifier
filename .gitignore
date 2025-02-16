@@ -2,4 +2,4 @@
 .vscode/
 .idea/
 out/
-data/wishlist
+data/*.json

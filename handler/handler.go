@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -40,28 +39,32 @@ type Message struct {
 func unmarshal(body []byte) (Message, bool) {
 	var data Message
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Error().Err(err).Msg("Could not unmarshal json bytestream")
+		log.Fatal().Err(err).Msg("Could not unmarshal json bytestream")
 		return Message{}, false
 	}
 	log.Debug().Msgf("Title ID: %s", data.Prices[0].DiscountPrice.Amount)
 	return data, data.Prices[0].DiscountPrice.Amount != ""
 }
 
+// returns the regular price of a game using the json bytestream if it does not have a discount it returns the regular price
 func GetPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
 	if hasDiscount {
-		fmt.Printf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.RawValue)
+		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.RawValue)
 		return data.Prices[0].DiscountPrice.RawValue
 	}
-	fmt.Printf("Returning regular price: %s\n", data.Prices[0].RegularPrice.RawValue)
+	log.Debug().Msgf("Returning regular price: %s", data.Prices[0].RegularPrice.RawValue)
 	return data.Prices[0].RegularPrice.RawValue
 }
 
+// returns the price formatted of a game with discount using the json bytestream if it does not have a discount it returns the regular price
+
 func GetFormPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
-
 	if hasDiscount {
+		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.Amount)
 		return data.Prices[0].DiscountPrice.Amount
 	}
+	log.Debug().Msgf("Returning regular price: %s", data.Prices[0].RegularPrice.Amount)
 	return data.Prices[0].RegularPrice.Amount
 }
