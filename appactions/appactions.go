@@ -2,13 +2,14 @@ package appactions
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
-	"github.com/davidclarafigueiredo/SaleNotifier/actions"
 	"github.com/davidclarafigueiredo/SaleNotifier/connect"
 	"github.com/davidclarafigueiredo/SaleNotifier/handler"
 	"github.com/davidclarafigueiredo/SaleNotifier/scraper"
 	"github.com/rs/zerolog/log"
+	"github.com/shopspring/decimal"
 )
 
 type GameStruct struct {
@@ -31,7 +32,7 @@ func GetInformation(url string) string {
 	discountedPrice := handler.GetPrice(connect.Connect(apiUrl))
 
 	isDiscounted := "not on sale"
-	if actions.ComparePrice(url, apiUrl) {
+	if comparePrice(url, apiUrl) {
 		isDiscounted = "on sale"
 	}
 
@@ -63,7 +64,7 @@ func WriteEntryToJSON(jsonFileName string, url string) {
 	regularPrice := scraper.GetPrice(url)
 	discountedPrice := handler.GetFormPrice(connect.Connect(apiUrl))
 	isDiscounted := "not on sale"
-	if actions.ComparePrice(url, apiUrl) {
+	if comparePrice(url, apiUrl) {
 		isDiscounted = "on sale"
 	}
 
@@ -95,7 +96,60 @@ func WriteEntryToJSON(jsonFileName string, url string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error writing to output file")
 	}
+}
 
+//export UpdateJSONEntry
+func UpdateJSONEntry(jsonFileName string, url string) bool {
+	// Open the json file
+	err := checkFile(jsonFileName)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error opening/creating output file")
+	}
+	jsonFile, err := os.ReadFile(jsonFileName)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error opening output file for reading")
+	}
+
+	// Get sale status from http request
+	nsuid := scraper.GetNSUID(url)
+	apiUrl := "https://api.ec.nintendo.com/v1/price?country=DE&lang=de&ids=" + nsuid
+	isDiscountedNew := "not on sale"
+	if comparePrice(url, apiUrl) {
+		isDiscountedNew = "on sale"
+	}
+
+	// Read the json file
+	data := []GameStruct{}
+	json.Unmarshal(jsonFile, &data)
+
+	var isDiscountedOld string
+
+	// Get sale status in json file und update it
+	for i, game := range data {
+		if game.Nsuid == nsuid {
+			isDiscountedOld = game.IsDiscounted
+			if game.IsDiscounted != isDiscountedNew {
+				data[i].IsDiscounted = isDiscountedNew
+			}
+		}
+	}
+
+	// Preparing the data to be marshalled and written.
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error marshalling data")
+	}
+	// Write data to the json file
+	err = os.WriteFile(jsonFileName, dataBytes, 0644)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error writing to output file")
+	}
+
+	if isDiscountedOld == "not on sale" && isDiscountedNew == "on sale" {
+		return true // discount states changed to on sale
+	}
+
+	return false
 }
 
 func checkFile(filename string) error {
@@ -107,4 +161,28 @@ func checkFile(filename string) error {
 		}
 	}
 	return nil
+}
+
+// returns a boolean if game is part of the wishlist (i think?)
+// func contains(list []string, item string) bool {
+// 	for _, v := range list {
+// 		if v == item {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
+
+func comparePrice(url string, apiUrl string) bool {
+
+	price, _ := decimal.NewFromString(handler.GetPrice(connect.Connect(apiUrl)))
+	discountPrice, _ := decimal.NewFromString(scraper.GetPrice(url))
+
+	if !price.Equal(discountPrice) {
+		fmt.Println("Price: ", price)
+		fmt.Println("Discount Price: ", discountPrice)
+		// fmt.Printf("%s is on sale for %s", scraper.GetGameTitle(url), handler.GetFormPrice(connect.Connect(apiUrl)))
+		return true
+	}
+	return false
 }

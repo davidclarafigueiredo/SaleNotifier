@@ -50,10 +50,10 @@ func unmarshal(body []byte) (Message, bool) {
 func GetPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
 	if hasDiscount {
-		log.Debug().Msgf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.RawValue)
+		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.RawValue)
 		return data.Prices[0].DiscountPrice.RawValue
 	}
-	log.Debug().Msgf("Returning regular price: %s\n", data.Prices[0].RegularPrice.RawValue)
+	log.Debug().Msgf("Returning regular price: %s", data.Prices[0].RegularPrice.RawValue)
 	return data.Prices[0].RegularPrice.RawValue
 }
 
@@ -62,9 +62,9 @@ func GetPrice(body []byte) string {
 func GetFormPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
 	if hasDiscount {
-		log.Debug().Msgf("Title has a discount: %s\n", data.Prices[0].DiscountPrice.Amount)
+		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.Amount)
 		return data.Prices[0].DiscountPrice.Amount
 	}
-	log.Debug().Msgf("Returning regular price: %s\n", data.Prices[0].RegularPrice.Amount)
+	log.Debug().Msgf("Returning regular price: %s", data.Prices[0].RegularPrice.Amount)
 	return data.Prices[0].RegularPrice.Amount
 }
