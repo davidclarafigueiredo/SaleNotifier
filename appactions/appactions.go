@@ -152,6 +152,42 @@ func UpdateJSONEntry(jsonFileName string, url string) bool {
 	return false
 }
 
+//export RemoveEntryFromJSON
+func RemoveEntryFromJSON(jsonFileName string, nsuid string) {
+	// Open the json file
+	err := checkFile(jsonFileName)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error opening/creating output file")
+	}
+	jsonFile, err := os.ReadFile(jsonFileName)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error opening output file for reading")
+	}
+
+	// Read the json file
+	data := []GameStruct{}
+	json.Unmarshal(jsonFile, &data)
+
+	// Remove the game from the data
+	for i, game := range data {
+		if game.Nsuid == nsuid {
+			data = append(data[:i], data[i+1:]...)
+			break
+		}
+	}
+
+	// Preparing the data to be marshalled and written.
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error marshalling data")
+	}
+	// Write data to the json file
+	err = os.WriteFile(jsonFileName, dataBytes, 0644)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error writing to output file")
+	}
+}
+
 func checkFile(filename string) error {
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
