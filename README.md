@@ -7,4 +7,4 @@ To build the ios library, run:
 cd appactions/
 gomobile bind -target ios -o ../out/Appactions.xcframework
 ```
-This will output the library to `out/` for use in [sale-notifier-app](https://github.com/AntonioFigueiredo/sale-notifier-app).
+This will output the library to `out/` for use in [sale_notifier_app](https://github.com/AntonioFigueiredo/sale_notifier_app).
