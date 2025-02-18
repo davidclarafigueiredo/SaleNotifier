@@ -41,16 +41,18 @@ func GetInformation(url string) string {
 }
 
 //export WriteToJSON
-func WriteEntryToJSON(jsonFileName string, url string) {
+func WriteEntryToJSON(jsonFileName string, url string) bool {
 
 	// Open the json file
 	err := checkFile(jsonFileName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error opening/creating output file")
+		return false
 	}
 	jsonFile, err := os.ReadFile(jsonFileName)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error opening output file for reading")
+		return false
 	}
 
 	// Read the json file
@@ -80,8 +82,8 @@ func WriteEntryToJSON(jsonFileName string, url string) {
 
 	// Append the new game to the data if the title is not already in the list
 	for _, game := range data {
-		if game.GameTitle == newGame.GameTitle {
-			return
+		if game.GameTitle == newGame.GameTitle || newGame.GameTitle == "" {
+			return false
 		}
 	}
 	data = append(data, *newGame)
@@ -90,12 +92,15 @@ func WriteEntryToJSON(jsonFileName string, url string) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error marshalling data")
+		return false
 	}
 	// Write data to the json file
 	err = os.WriteFile(jsonFileName, dataBytes, 0644)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error writing to output file")
+		return false
 	}
+	return true
 }
 
 //export UpdateJSONEntry
