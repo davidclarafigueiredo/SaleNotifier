@@ -42,6 +42,10 @@ func unmarshal(body []byte) (Message, bool) {
 		log.Fatal().Err(err).Msg("Could not unmarshal json bytestream")
 		return Message{}, false
 	}
+	if len(data.Prices) == 0 {
+		log.Error().Msg("Prices slice is empty")
+		return Message{}, false
+	}
 	log.Debug().Msgf("Title ID: %s", data.Prices[0].DiscountPrice.Amount)
 	return data, data.Prices[0].DiscountPrice.Amount != ""
 }
@@ -49,6 +53,10 @@ func unmarshal(body []byte) (Message, bool) {
 // returns the regular price of a game using the json bytestream if it does not have a discount it returns the regular price
 func GetPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
+	if len(data.Prices) == 0 {
+		log.Error().Msg("Prices slice is empty")
+		return ""
+	}
 	if hasDiscount {
 		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.RawValue)
 		return data.Prices[0].DiscountPrice.RawValue
@@ -61,6 +69,10 @@ func GetPrice(body []byte) string {
 
 func GetFormPrice(body []byte) string {
 	data, hasDiscount := unmarshal(body)
+	if len(data.Prices) == 0 {
+		log.Error().Msg("Prices slice is empty")
+		return ""
+	}
 	if hasDiscount {
 		log.Debug().Msgf("Title has a discount: %s", data.Prices[0].DiscountPrice.Amount)
 		return data.Prices[0].DiscountPrice.Amount
